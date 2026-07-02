@@ -1,3 +1,6 @@
+[![](https://flat.badgen.net/npm/v/@alkhipce/strapi-plugin-llm-translate?icon=npm)](https://www.npmjs.com/package/@alkhipce/strapi-plugin-llm-translate)
+[![](https://flat.badgen.net/github/stars/etozhealkhipce/strapi-plugin-llm-translate)](https://github.com/etozhealkhipce/strapi-plugin-llm-translate)
+
 # strapi-plugin-llm-translate
 
 Bulk-translate Strapi i18n entries with Anthropic or OpenAI from the Content Manager edit view.
