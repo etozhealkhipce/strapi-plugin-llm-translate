@@ -4,7 +4,12 @@
 const stable = process.env.RELEASE_CHANNEL === 'stable';
 
 module.exports = {
-  branches: stable ? ['main'] : [{ name: 'main', prerelease: 'alpha', channel: 'alpha' }],
+  // semantic-release requires at least one non-prerelease branch in the config,
+  // so alpha mode lists `semantic-release-anchor` — a remote branch that exists
+  // solely to satisfy that rule and never receives pushes or releases.
+  branches: stable
+    ? ['main']
+    : ['semantic-release-anchor', { name: 'main', prerelease: 'alpha', channel: 'alpha' }],
   plugins: [
     '@semantic-release/commit-analyzer',
     '@semantic-release/release-notes-generator',
