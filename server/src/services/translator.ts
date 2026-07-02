@@ -12,6 +12,8 @@ export interface TranslateDocumentInput {
   mode: TranslateMode;
   /** Locale codes to translate into. Defaults to every other enabled locale. */
   targetLocales?: string[];
+  /** Admin user id triggering this translation, used to stamp createdBy/updatedBy. */
+  userId?: string | number;
 }
 
 export interface LocaleTranslationResult {
@@ -49,7 +51,7 @@ function nonEmptyTextByKey(slots: ReturnType<typeof buildTargetData>['slots']): 
 
 const translatorService = ({ strapi }: { strapi: Core.Strapi }) => ({
   async translateDocument(input: TranslateDocumentInput): Promise<TranslateDocumentResult> {
-    const { uid, documentId, sourceLocale, mode } = input;
+    const { uid, documentId, sourceLocale, mode, userId } = input;
 
     const contentType = strapi.contentTypes[uid as keyof typeof strapi.contentTypes];
     if (!contentType) {
@@ -93,26 +95,26 @@ const translatorService = ({ strapi }: { strapi: Core.Strapi }) => ({
         let slotsToTranslate = slots;
         let skippedExisting = 0;
 
-        if (mode === 'empty-only') {
-          const targetEntity = await strapi.documents(uid as any).findOne({
-            documentId,
-            locale: targetLocale,
-            populate,
-          });
+        // Needed both for "empty-only" merging and to know whether this call will
+        // create a brand-new locale row (so createdBy is only stamped on create).
+        const targetEntity = await strapi.documents(uid as any).findOne({
+          documentId,
+          locale: targetLocale,
+          populate,
+        });
 
-          if (targetEntity) {
-            const { slots: targetSlots } = buildTargetData(strapi, attributes, targetEntity);
-            const existingByKey = nonEmptyTextByKey(targetSlots);
+        if (mode === 'empty-only' && targetEntity) {
+          const { slots: targetSlots } = buildTargetData(strapi, attributes, targetEntity);
+          const existingByKey = nonEmptyTextByKey(targetSlots);
 
-            slotsToTranslate = [];
-            for (const slot of slots) {
-              const existing = existingByKey.get(slot.key);
-              if (existing !== undefined) {
-                slot.set(existing); // keep the already-filled-in target content untouched
-                skippedExisting += 1;
-              } else {
-                slotsToTranslate.push(slot);
-              }
+          slotsToTranslate = [];
+          for (const slot of slots) {
+            const existing = existingByKey.get(slot.key);
+            if (existing !== undefined) {
+              slot.set(existing); // keep the already-filled-in target content untouched
+              skippedExisting += 1;
+            } else {
+              slotsToTranslate.push(slot);
             }
           }
         }
@@ -133,6 +135,13 @@ const translatorService = ({ strapi }: { strapi: Core.Strapi }) => ({
               slot.set(value);
             }
             // else: leave the source-language text in place as a safe fallback.
+          }
+        }
+
+        if (userId) {
+          data.updatedBy = userId;
+          if (!targetEntity) {
+            data.createdBy = userId;
           }
         }
 

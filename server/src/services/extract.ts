@@ -23,6 +23,25 @@ export interface BuildResult {
 
 const TEXT_TYPES = new Set(['string', 'text']);
 
+/**
+ * Strapi auto-generates these attributes on every content type. They must never
+ * be copied into a `documents().update()` payload: writing `locale` /
+ * `localizations` rewires the i18n locale-linkage graph (splitting the document
+ * into a phantom one whose documentId is a stringified row id), and the
+ * timestamp / creator fields would clobber Strapi-managed metadata.
+ */
+const SYSTEM_FIELDS = new Set([
+  'id',
+  'documentId',
+  'locale',
+  'localizations',
+  'createdAt',
+  'updatedAt',
+  'publishedAt',
+  'createdBy',
+  'updatedBy',
+]);
+
 function isLocalized(attribute: Schema.Attribute.AnyAttribute): boolean {
   return (attribute as any)?.pluginOptions?.i18n?.localized !== false;
 }
@@ -63,6 +82,8 @@ export function buildTargetData(
   const slots: TranslatableSlot[] = [];
 
   for (const [fieldName, attribute] of Object.entries(attributes)) {
+    if (SYSTEM_FIELDS.has(fieldName)) continue;
+
     const raw = source?.[fieldName];
     if (raw === undefined) continue;
 

@@ -18,7 +18,7 @@ const translateController = ({ strapi }: { strapi: Core.Strapi }) => ({
       ctx.body = await strapi
         .plugin('llm-translate')
         .service('translator')
-        .translateDocument({ uid, documentId, sourceLocale, mode, targetLocales });
+        .translateDocument({ uid, documentId, sourceLocale, mode, targetLocales, userId: ctx.state.user?.id });
     } catch (error: any) {
       strapi.log.error('[llm-translate] translate request failed', error);
       ctx.throw(400, error?.message || 'Translation failed');
