@@ -1,3 +1,10 @@
+## [1.0.1](https://github.com/etozhealkhipce/strapi-plugin-llm-translate/compare/v1.0.0...v1.0.1) (2026-07-02)
+
+
+### Bug Fixes
+
+* bug fixes [skip ci] ([9198e9d](https://github.com/etozhealkhipce/strapi-plugin-llm-translate/commit/9198e9db18d291d2807e2143711ba5395a4abd50))
+
 # 1.0.0 (2026-07-02)
 
 
