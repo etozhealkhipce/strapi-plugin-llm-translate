@@ -3,7 +3,7 @@
   "version": "0.0.0-development",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/alkhipce/strapi-plugin-llm-translate.git"
+    "url": "git+https://github.com/etozhealkhipce/strapi-plugin-llm-translate.git"
   },
   "publishConfig": {
     "access": "public"
