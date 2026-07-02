@@ -1,0 +1,46 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write # git tags + GitHub Releases
+  issues: write # semantic-release comments on linked issues
+  pull-requests: write
+
+concurrency:
+  group: release # a push run and a manual run must not race
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # semantic-release needs the full tag history
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run test:ts:back && npm run test:ts:front
+      - run: npm run build && npm run verify
+      # semantic-release is intentionally not a devDependency — installed ad-hoc
+      # in CI only, as its docs recommend. Core plugins (commit-analyzer,
+      # release-notes-generator, npm, github) ship with the package itself;
+      # changelog and git are external and must be pinned alongside.
+      - run: |
+          npx \
+            --package semantic-release@25.0.5 \
+            --package @semantic-release/changelog@6.0.3 \
+            --package @semantic-release/git@10.0.1 \
+            semantic-release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          # push → alpha prerelease; manual "Run workflow" → stable
+          RELEASE_CHANNEL: ${{ github.event_name == 'workflow_dispatch' && 'stable' || 'alpha' }}
